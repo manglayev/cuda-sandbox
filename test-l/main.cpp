@@ -6,16 +6,11 @@ using namespace std;
 
 int main()
 {
-  const int size=3;
-  Solution solution(size);
-  solution.setArray(size);
-  int *array = solution.getArray();
-  for (int b=0;b<size;b++)
-    printf("filledArray[%d] = %d\n", b, array[b]);
-  /*
-    int a = 3;
-    int b = 5;
-    printf("c = %d\n", s.multiply(a, b));
-  */
+  Solution s;
+  int a = 3;
+  int b = 5;
+  int sparseMatrix[3][3] = { {1, 0, -1}, {2, 0, 0}, {0, -1, 0} };
+  int vector[3] = {-1, 1, 2};
+  printf("c = %d\n", s.multiply(a, b, sparseMatrix));
   return 0;
 }
