@@ -8,7 +8,7 @@
 
 __global__ void multiply(int *dev_sparseMatrix, int *dev_vector, int *dev_result)
 {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  /*
   if(tid == 1)
   {
     for(int a=0;a<BLOCKS;a++)
@@ -20,6 +20,68 @@ __global__ void multiply(int *dev_sparseMatrix, int *dev_vector, int *dev_result
       printf("\n");
     }
   }
+
+  while(tid < BLOCKS * THREADS)
+  {
+    temp += dev_sparseMatrix[tid] * dev_vector[threadIdx.x];
+    tid += blockIdx.x * gridDim.x;
+  }
+  cacheResult[threadIdx.x] = temp;
+  */
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  //__shared__ int cacheResult[THREADS];
+  //int temp = 0;
+  if(tid < BLOCKS * THREADS)
+  {
+    //printf("tid = %d;\n", tid);
+    if( dev_sparseMatrix[tid] != 0 && dev_vector[threadIdx.x] != 0 )
+      dev_sparseMatrix[tid] = dev_sparseMatrix[tid] * dev_vector[threadIdx.x];
+      //printf("dev_sparseMatrix[%d] = %d;\n", tid, dev_sparseMatrix[tid]);
+  }
+  __syncthreads();
+  if(threadIdx.x < THREADS)
+  {
+    int i = 0;
+    //printf("threadIdx.x = %d;\n", threadIdx.x);
+    //printf("blockIdx.x = %d;\n", blockIdx.x);
+    //printf("blockDim.x = %d;\n", blockDim.x);
+    /*
+    while(i < THREADS)
+    {
+      //dev_result[threadIdx.x] = dev_result[threadIdx.x] + dev_sparseMatrix[i+blockIdx.x*blockDim.x];
+      //printf("i = %d; i+blockIdx.x*blockDim.x = %d\n", i, i+blockIdx.x*blockDim.x);
+      //dev_result[threadIdx.x] = dev_result[threadIdx.x] + dev_sparseMatrix[i+blockIdx.x*blockDim.x];
+      dev_sparseMatrix[i+blockIdx.x*blockDim.x] = dev_sparseMatrix[blockIdx.x*blockDim.x] + dev_sparseMatrix[i+blockIdx.x*blockDim.x];
+      i++;
+      __syncthreads();
+      //printf("i = %d; dev_result[threadIdx.x] = %d;\n", i, dev_result[threadIdx.x]);
+    }
+    //__syncthreads();
+    */
+  }
+  int cacheIndex = threadIdx.x;
+  dev_result[cacheIndex] = temp;
+  int i = blockDim.x/3;
+  while(i!=0)
+  {
+    if(cacheIndex < i)
+      dev_sparseMatrix[cacheIndex] += dev_sparseMatrix[cacheIndex+i];
+    __syncthreads();
+    i/=3;
+  }
+  if(tid<2)
+  {
+    if(threadIdx.x == 0)
+    {
+      dev_result[tid] = dev_sparseMatrix[threadIdx.x];
+    }
+  }
+
+  //if(threadIdx.x < THREADS)
+  //{
+  //  dev_result[threadIdx.x] = cacheResult[threadIdx.x];
+  //}
+  /*
   if(tid < BLOCKS * THREADS)
   {
     printf("tid = %d;\n", tid);
@@ -27,7 +89,9 @@ __global__ void multiply(int *dev_sparseMatrix, int *dev_vector, int *dev_result
       dev_result[threadIdx.x] = dev_result[threadIdx.x] + 0;
     else
       dev_result[threadIdx.x] = dev_result[threadIdx.x] + dev_sparseMatrix[tid] * dev_vector[threadIdx.x];
+    __syncthreads();
   }
+  */
 }
 
 int main()
@@ -67,14 +131,20 @@ int main()
 
   int *dev_result;
   cudaMalloc((void**)&dev_result, THREADS*sizeof(int));
-  printf("GPU START\n");
   multiply<<<BLOCKS, THREADS>>>(dev_sparseMatrix, dev_vector, dev_result);
-  printf("GPU END\n");
   cudaMemcpy(result, dev_result, THREADS*sizeof(int), cudaMemcpyDeviceToHost);
-
+  cudaMemcpy(sparseMatrix, dev_sparseMatrix, THREADS*sizeof(int), cudaMemcpyDeviceToHost);
   for(int c=0; c<3; c++)
     printf("result[%d] = %d;\n", c, result[c]);
 
+  for(int a=0; a<3; a++)
+  {
+    for(int b=0; b<3; b++)
+    {
+        printf("C SM[%d][%d] = %d; ", a, b, sparseMatrix[a][b]);
+    }
+    printf("\n");
+  }
   cudaFree(sparseMatrix);
   cudaFree(vector);
   cudaFree(dev_result);

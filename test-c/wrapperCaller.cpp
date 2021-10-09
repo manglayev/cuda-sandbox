@@ -4,7 +4,5 @@
 
 void wrapperCaller(int b)
 {
-  printf("STAGE 2\n");
-  printf("b = %d\n", b);
   wrapper(b);
 }

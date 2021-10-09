@@ -16,7 +16,6 @@ int main()
     printf("\n");
   }
 
-  //int sparseMatrix[ROWS][COLS] = { {1, 0, -1}, {2, 0, 0}, {0, -1, 0} };
   int vector[COLS];
   for(int b=0;b<COLS;b++)
   {

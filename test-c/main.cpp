@@ -4,9 +4,7 @@
 
 int main()
 {
-  printf("STAGE 1\n");
   int a = 1000;
-  printf("a = %d\n", a);
   wrapperCaller(a);
   return 0;
 }
