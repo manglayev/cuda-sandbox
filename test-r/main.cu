@@ -1,11 +1,11 @@
+#include "header.cuh"
+
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "cuda.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "header.cuh"
 
 #define THREADS 5
 #define BLOCKS 1
