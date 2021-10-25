@@ -19,7 +19,7 @@ __global__ void globalFunction(int *dev_a)
       int b[2];
       dev_a[thread] = dev_a[thread]*dev_a[thread];
     #endif
-    #ifdef DACC_SEMILAG_PPM
+    #ifdef ACC_SEMILAG_PPM
       int b[3];
       dev_a[thread] = deviceFunction(dev_a[thread]);
     #endif
@@ -38,11 +38,11 @@ int main()
   int b[3];
   printf("ACC_SEMILAG_PLM");
   #endif
-  #ifdef DACC_SEMILAG_PPM
+  #ifdef ACC_SEMILAG_PPM
   int b[3];
   printf("ACC_SEMILAG_PPM");
   #endif
-  
+
   int *dev_a;
   cudaMalloc((void**)&dev_a, THREADS*sizeof(int));
   cudaMemcpy(dev_a, a, THREADS*sizeof(int), cudaMemcpyHostToDevice);
