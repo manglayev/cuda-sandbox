@@ -4,11 +4,14 @@ RM=/bin/rm -f
 
 all: main
 
-main: main.o
-	${NVCC} ${CUDAFLAGS} main.o -o main
+main: main.o device.o
+	${NVCC} ${CUDAFLAGS} main.o device.o -o main
 
 main.o: main.cu
-		${NVCC} ${CUDAFLAGS} -c main.cu
+	${NVCC} ${CUDAFLAGS} -dc main.cu
+
+device.o: device.cu
+	${NVCC} ${CUDAFLAGS} -dc device.cu
 
 clean:
 	${RM} *.o main
