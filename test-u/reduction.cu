@@ -5,17 +5,17 @@
 #define COLUMNS 4
 /*
 simple reduction.
-Summing elements of each column in m by n matrix.
+Summing elements of each row in m by n matrix.
 */
 __global__ void reduction_cuda(float * d_out, const float * d_in)
 {
   int tid = threadIdx.x+blockDim.x*blockIdx.x;
 
-  if(tid<COLUMNS)
+  if(tid<ROWS)
   {
-    for(int j=0; j<ROWS; j++)
+    for(int i=0; i<COLUMNS; i++)
     {
-      d_out[tid] = d_out[tid] + d_in[tid+COLUMNS*j];
+      d_out[tid] = d_out[tid] + d_in[i+COLUMNS*tid];
     }
   }
 }
@@ -37,14 +37,14 @@ int main()
     cudaMalloc((void**)&d_in,  COLUMNS*ROWS*sizeof(float));
     cudaMemcpy(d_in, array, COLUMNS*ROWS*sizeof(float), cudaMemcpyHostToDevice);
     float *d_out;
-    cudaMalloc((void**)&d_out, COLUMNS*sizeof(float));
+    cudaMalloc((void**)&d_out, ROWS*sizeof(float));
     reduction_cuda << < ROWS, COLUMNS >> >(d_out, d_in);
 
     float *out;
-    out = (float *)malloc(COLUMNS*sizeof(float));
-    cudaMemcpy(out, d_out,COLUMNS*sizeof(float), cudaMemcpyDeviceToHost);
+    out = (float *)malloc(ROWS*sizeof(float));
+    cudaMemcpy(out, d_out,ROWS*sizeof(float), cudaMemcpyDeviceToHost);
     printf("\n");
-    for(int c=0; c<COLUMNS; c++)
+    for(int c=0; c<ROWS; c++)
     {
       printf("c[%d] = %.2f; ", c, out[c]);
     }
