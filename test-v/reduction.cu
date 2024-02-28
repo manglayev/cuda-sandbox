@@ -1,100 +1,97 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ROWS_A 2
-#define COLUMNS_A_ROWS_B 3
-//#define ROWS_B 3
-#define COLUMNS_B 4
+#define N 3
 /*
-Matrix multiplication
-Simple parallel axb to bxc matrix multiplication
+  Matrix multiplication
+  Simple parallel nxn to nxn matrix multiplication
 */
-__global__ void reduction_cuda(float * in_a, float * in_b, float * d_out)
+__global__ void matrixMultiplication(int * in_a, int * in_b, int * out_c)
 {
+  int index = threadIdx.x+blockDim.x*blockIdx.x;
+
+  if(index < N*N)
+  {
+    for(int i=0; i<N; i++)
+    {
+      out_c[index] = out_c[index] + in_a[i+N*index/N] * in_b[index + N*i];
+    }
+  }
   /*
   int tid_1 = threadIdx.x+blockDim.x*blockIdx.x;
   int tid_2 = threadIdx.x+blockDim.x*blockIdx.x;
   int tid_3 = threadIdx.x+blockDim.x*blockIdx.x;
-  */
-  int tid = threadIdx.x+blockDim.x*blockIdx.x;
-
-  if (tid<ROWS_A)
+  if (tid<N)
   {
-    if(tid<COLUMNS_B)
-    {
-      printf("tid = %d\n", tid);
+      //printf("tid = %d\n", tid);
       //printf("tid_1 = %d; tid_3 = %d\n", tid_1, tid_3);
-    }
-    //for(int i=0; i<COLUMNS_A_ROWS_B; i++)
-    {
+      //for(int i=0; i<COLUMNS_A_ROWS_B; i++)
       //printf("integer division in GPU: %d / %d = %d;\n", tid_1, COLUMNS_A_ROWS_B, tid_1 / COLUMNS_A_ROWS_B);
       //d_out[tid_2] = d_out[tid_2] + in_a[(tid_1 / COLUMNS_A_ROWS_B)*COLUMNS_A_ROWS_B+i]*in_b[(i*COLUMNS_B)+tid_3];
-    }
   }
+    */
 }
 
 int main()
 {
-    float array_1[ROWS_A][COLUMNS_A_ROWS_B];
-    for (int a=0; a<ROWS_A; a++)
+    int array_1[N][N];
+    for (int a=0; a<N; a++)
     {
-      for (int b=0; b<COLUMNS_A_ROWS_B; b++)
+      for (int b=0; b<N; b++)
       {
-        array_1[a][b] = 1+a+b*COLUMNS_A_ROWS_B;
-        printf("array_1[%d][%d] = %.2f; ", a, b, array_1[a][b]);
+        array_1[a][b] = a+b;
+        printf("array_1[%d][%d] = %d; ", a, b, array_1[a][b]);
       }
-    printf("\n");
+      printf("\n");
     }
     printf("\n");
-    float array_2[COLUMNS_A_ROWS_B][COLUMNS_B];
-    for (int a=0; a<COLUMNS_A_ROWS_B; a++)
+    int array_2[N][N];
+    for (int a=0; a<N; a++)
     {
-      for (int b=0; b<COLUMNS_B; b++)
+      for (int b=0; b<N; b++)
       {
-        array_2[a][b] = 1+a+b*COLUMNS_B;
-        printf("array_2[%d][%d] = %.2f; ", a, b, array_2[a][b]);
+        array_2[a][b] = a+b;
+        printf("array_2[%d][%d] = %d; ", a, b, array_2[a][b]);
       }
-    printf("\n");
+      printf("\n");
     }
     printf("\n");
 
-    float *in_a;
-    cudaMalloc((void**)&in_a,  ROWS_A*COLUMNS_A_ROWS_B*sizeof(float));
-    cudaMemcpy(in_a, array_1, ROWS_A*COLUMNS_A_ROWS_B*sizeof(float), cudaMemcpyHostToDevice);
+    int *in_a;
+    cudaMalloc((void **)&in_a,  N*N*sizeof(int));
+    cudaMemcpy(in_a, array_1, N*N*sizeof(int), cudaMemcpyHostToDevice);
 
-    float *in_b;
-    cudaMalloc((void**)&in_b,  COLUMNS_A_ROWS_B*COLUMNS_B*sizeof(float));
-    cudaMemcpy(in_b, array_2, COLUMNS_A_ROWS_B*COLUMNS_B*sizeof(float), cudaMemcpyHostToDevice);
+    int *in_b;
+    cudaMalloc((void **)&in_b,  N*N*sizeof(int));
+    cudaMemcpy(in_b, array_2, N*N*sizeof(int), cudaMemcpyHostToDevice);
 
-    float *d_out;
-    cudaMalloc((void**)&d_out, ROWS_A*COLUMNS_B*sizeof(float));
-    reduction_cuda << < ROWS_A, COLUMNS_B >> >(in_a, in_b, d_out);
-
-    float out[ROWS_A][COLUMNS_B];
-
-    for (int a=0; a<ROWS_A; a++)
+    int *out_c;
+    cudaMalloc((void **)&out_c, N*N*sizeof(int));
+    matrixMultiplication <<< N, N >>>(in_a, in_b, out_c);
+    cudaDeviceSynchronize();
+    int out[N][N];
+    for (int a=0; a<N; a++)
     {
-      for (int b=0; b<COLUMNS_B; b++)
+      for (int b=0; b<N; b++)
       {
-        out[a][b] = 100;
+        out[a][b] = 1;
       }
     }
-
-    cudaMemcpy(out, d_out, ROWS_A*COLUMNS_B*sizeof(float), cudaMemcpyDeviceToHost);
-
-    for (int a=0; a<ROWS_A; a++)
+    cudaMemcpy(out, out_c, N*N*sizeof(int), cudaMemcpyDeviceToHost);
+    printf("RESULT MATRIX:\n");
+    for (int a=0; a<N; a++)
     {
-      for (int b=0; b<COLUMNS_B; b++)
+      for (int b=0; b<N; b++)
       {
-    //    printf("out[%d][%d] = %.2f; ", a, b, out[a][b]);
+        printf("out[%d][%d] = %d; ", a, b, out[a][b]);
       }
-    printf("\n");
+      printf("\n");
     }
     printf("\n");
 
     cudaFree(in_a);
     cudaFree(in_b);
-    cudaFree(d_out);
+    cudaFree(out_c);
 
     return 0;
 }
