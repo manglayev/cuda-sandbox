@@ -1,5 +1,6 @@
 NVCC=nvcc
 CUDAFLAGS=-arch=sm_60
+CUDAFLAGS += -DACC_SEMILAG_PPM
 RM=/bin/rm -f
 
 all: main
