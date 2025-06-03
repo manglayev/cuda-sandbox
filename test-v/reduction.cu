@@ -43,7 +43,7 @@ int main()
     {
       for (int b=0; b<N; b++)
       {
-        printf("in_a[%d][%d] = %d; ", a, b, in_a[a*N+b]);
+        printf("in_b[%d][%d] = %d; ", a, b, in_b[a*N+b]);
       }
       printf("\n");
     }
@@ -55,7 +55,7 @@ int main()
     {
       for (int b=0; b<N; b++)
       {
-        printf("out[%d][%d] = %d; ", a, b, out_c[b+a*N]);
+        printf("out_c[%d][%d] = %d; ", a, b, out_c[b+a*N]);
       }
       printf("\n");
     }
